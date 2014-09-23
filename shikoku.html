@@ -1,0 +1,952 @@
+<!DOCTYPE html> 
+<html> 
+<head> 
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>四国旅行地図</title> 
+<style>
+.wordbreak{
+    overflow: visible;
+    white-space: normal;
+}
+</style>
+
+<link rel="stylesheet" href="http://code.jquery.com/mobile/1.3.2/jquery.mobile-1.3.2.min.css" />
+<script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+<script src="http://code.jquery.com/mobile/1.3.2/jquery.mobile-1.3.2.min.js"></script>
+
+<script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=true"></script>
+
+<script>
+
+var g_map = null;
+var g_directionDisplay = null;
+var g_directionsService = null;
+var g_latlon_current = null;
+var LATLON_INIT = new google.maps.LatLng(34.220177258268414, 134.01685237884521);
+
+var g_iconPics = {
+    car: {
+        icon: 'http://maps.google.co.jp/mapfiles/ms/micons/cabs.png',
+        shadow: 'http://maps.google.co.jp/mapfiles/ms/micons/cabs.shadow.png',
+    },
+    tree: {
+        icon: 'http://maps.google.co.jp/mapfiles/kml/pal2/icon4.png',
+        shadow: 'http://maps.google.co.jp/mapfiles/kml/pal2/icon4s.png',
+    },
+    tree2: {
+        icon: 'http://maps.google.co.jp/mapfiles/ms/icons/tree.png',
+        shadow: 'http://maps.google.co.jp/mapfiles/ms/icons/tree.shadow.png',
+    },
+    bicycle: {
+        icon: 'http://maps.google.co.jp/mapfiles/ms/icons/cycling.png',
+        shadow: 'http://maps.google.co.jp/mapfiles/ms/icons/cycling.shadow.png',
+    },
+    food: {
+        icon: 'http://maps.google.co.jp/mapfiles/ms/icons/restaurant.png',
+        shadow: 'http://maps.google.co.jp/mapfiles/ms/icons/restaurant.shadow.png',
+    },
+    food_s: {
+        icon: 'http://maps.google.co.jp/mapfiles/ms/icons/snack_bar.png',
+        shadow: 'http://maps.google.co.jp/mapfiles/ms/icons/snack_bar.shadow.png',
+    },
+    bed: {
+        icon: 'http://maps.google.co.jp/mapfiles/ms/icons/lodging.png',
+        shadow: 'http://maps.google.co.jp/mapfiles/ms/icons/lodging.shadow.png',
+    },
+    building: {
+        icon: 'http://maps.google.co.jp/mapfiles/ms/icons/homegardenbusiness.png',
+        shadow: 'http://maps.google.co.jp/mapfiles/ms/icons/homegardenbusiness.shadow.png',
+    },
+    city: {
+        icon: 'http://maps.google.co.jp/mapfiles/ms/icons/shopping.png',
+        shadow: 'http://maps.google.co.jp/mapfiles/ms/icons/shopping.shadow.png',
+    },
+    plane: {
+        icon: 'http://maps.google.com/mapfiles/ms/micons/plane.png',
+        shadow: 'http://maps.google.com/mapfiles/ms/micons/plane.shadow.png',
+    },
+    train: {
+        icon: 'http://maps.google.com/mapfiles/ms/micons/tram.png',
+        shadow: 'http://maps.google.com/mapfiles/ms/micons/tram.shadow.png',
+    },
+    hotspring: {
+        icon: 'http://maps.google.co.jp/mapfiles/ms/icons/hotsprings.png',
+        shadow: 'http://maps.google.co.jp/mapfiles/ms/icons/hotsprings.shadow.png',
+    },
+
+    blue_pin: {
+        icon: 'http://maps.google.co.jp/mapfiles/ms/icons/blue.png',
+        shadow: 'http://maps.google.co.jp/mapfiles/ms/icons/msmarker.shadow.png',
+    },
+    blue_pin_s: {
+        icon: 'http://labs.google.com/ridefinder/images/mm_20_blue.png',
+        shadow: 'http://labs.google.com/ridefinder/images/mm_20_shadow.png',
+    },
+    blue_pin_check: {
+        icon: 'http://maps.google.co.jp/mapfiles/ms/icons/blue-dot.png',
+        shadow: 'http://maps.google.co.jp/mapfiles/ms/icons/msmarker.shadow.png',
+    },
+    blue_push_pin: {
+        icon: 'http://maps.google.co.jp/mapfiles/ms/icons/blue-pushpin.png',
+        shadow: 'http://maps.google.co.jp/mapfiles/ms/icons/pushpin_shadow.png',
+    },
+    red_pin: {
+        icon: 'http://maps.google.co.jp/mapfiles/ms/icons/red.png',
+        shadow: 'http://maps.google.co.jp/mapfiles/ms/icons/msmarker.shadow.png',
+    },
+    red_pin_s: {
+        icon: 'http://labs.google.com/ridefinder/images/mm_20_red.png',
+        shadow: 'http://labs.google.com/ridefinder/images/mm_20_shadow.png',
+    },
+    red_pin_check: {
+        icon: 'http://maps.google.co.jp/mapfiles/ms/icons/red-dot.png',
+        shadow: 'http://maps.google.co.jp/mapfiles/ms/icons/msmarker.shadow.png',
+    },
+    red_push_pin: {
+        icon: 'http://maps.google.co.jp/mapfiles/ms/icons/red-pushpin.png',
+        shadow: 'http://maps.google.co.jp/mapfiles/ms/icons/pushpin_shadow.png',
+    },
+    green_pin: {
+        icon: 'http://maps.google.co.jp/mapfiles/ms/icons/green.png',
+        shadow: 'http://maps.google.co.jp/mapfiles/ms/icons/msmarker.shadow.png',
+    },
+    green_pin_s: {
+        icon: 'http://labs.google.com/ridefinder/images/mm_20_green.png',
+        shadow: 'http://labs.google.com/ridefinder/images/mm_20_shadow.png',
+    },
+    green_pin_check: {
+        icon: 'http://maps.google.co.jp/mapfiles/ms/icons/green-dot.png',
+        shadow: 'http://maps.google.co.jp/mapfiles/ms/icons/msmarker.shadow.png',
+    },
+    green_push_pin: {
+        icon: 'http://maps.google.co.jp/mapfiles/ms/icons/grn-pushpin.png',
+        shadow: 'http://maps.google.co.jp/mapfiles/ms/icons/pushpin_shadow.png',
+    },
+    water_pin: {
+        icon: 'http://maps.google.co.jp/mapfiles/ms/icons/lightblue.png',
+        shadow: 'http://maps.google.co.jp/mapfiles/ms/icons/msmarker.shadow.png',
+    },
+    //water_pin_s: {
+    //    icon: '',
+    //    shadow: 'http://labs.google.com/ridefinder/images/mm_20_shadow.png',
+    //},
+    water_pin_check: {
+        icon: 'http://maps.google.co.jp/mapfiles/ms/icons/ltblue-dot.png',
+        shadow: 'http://maps.google.co.jp/mapfiles/ms/icons/msmarker.shadow.png',
+    },
+    water_push_pin: {
+        icon: 'http://maps.google.co.jp/mapfiles/ms/icons/ltblu-pushpin.png',
+        shadow: 'http://maps.google.co.jp/mapfiles/ms/icons/pushpin_shadow.png',
+    },
+    yello_pin: {
+        icon: 'http://maps.google.co.jp/mapfiles/ms/icons/yellow.png',
+        shadow: 'http://maps.google.co.jp/mapfiles/ms/icons/msmarker.shadow.png',
+    },
+    yello_pin_s: {
+        icon: 'http://labs.google.com/ridefinder/images/mm_20_yellow.png',
+        shadow: 'http://labs.google.com/ridefinder/images/mm_20_shadow.png',
+    },
+    yello_pin_check: {
+        icon: 'http://maps.google.co.jp/mapfiles/ms/icons/yellow-dot.png',
+        shadow: 'http://maps.google.co.jp/mapfiles/ms/icons/msmarker.shadow.png',
+    },
+    yello_push_pin: {
+        icon: 'http://maps.google.co.jp/mapfiles/ms/icons/ylw-pushpin.png',
+        shadow: 'http://maps.google.co.jp/mapfiles/ms/icons/pushpin_shadow.png',
+    },
+    orange_pin: {
+        icon: 'http://maps.google.co.jp/mapfiles/ms/icons/orange.png',
+        shadow: 'http://maps.google.co.jp/mapfiles/ms/icons/msmarker.shadow.png',
+    },
+    orange_pin_s: {
+        icon: 'http://labs.google.com/ridefinder/images/mm_20_orange.png',
+        shadow: 'http://labs.google.com/ridefinder/images/mm_20_shadow.png',
+    },
+    orange_pin_check: {
+        icon: 'http://maps.google.co.jp/mapfiles/ms/icons/orange-dot.png',
+        shadow: 'http://maps.google.co.jp/mapfiles/ms/icons/msmarker.shadow.png',
+    },
+    //orange_push_pin: {
+    //    icon: '',
+    //    shadow: 'http://maps.google.co.jp/mapfiles/ms/icons/pushpin_shadow.png',
+    //},
+    violet_pin: {
+        icon: 'http://maps.google.co.jp/mapfiles/ms/icons/pink.png',
+        shadow: 'http://maps.google.co.jp/mapfiles/ms/icons/msmarker.shadow.png',
+    },
+    violet_pin_s: {
+        icon: 'http://labs.google.com/ridefinder/images/mm_20_purple.png',
+        shadow: 'http://labs.google.com/ridefinder/images/mm_20_shadow.png',
+    },
+    violet_pin_check: {
+        icon: 'http://maps.google.co.jp/mapfiles/ms/icons/pink-dot.png',
+        shadow: 'http://maps.google.co.jp/mapfiles/ms/icons/msmarker.shadow.png',
+    },
+    violet_push_pin: {
+        icon: 'http://maps.google.co.jp/mapfiles/ms/icons/pink-pushpin.png',
+        shadow: 'http://maps.google.co.jp/mapfiles/ms/icons/pushpin_shadow.png',
+    },
+};
+
+var g_poiInfos = [
+    {
+        name: "松山空港",
+        reading: "まつやまくうこう",
+        type: "airport",
+        subtype: "",
+        lat: 33.82764570272761,
+        lon: 132.70634651184082,
+        rating: 2,
+        description: "空港"
+    },
+    {
+        name: "高松空港",
+        reading: "たかまつくうこう",
+        type: "airport",
+        subtype: "",
+        lat: 34.220177258268414,
+        lon: 134.01685237884521,
+        rating: 2,
+        description: "空港"
+    },
+    {
+        name: "徳島空港",
+        reading: "とくしまくうこう",
+        type: "airport",
+        subtype: "",
+        lat: 34.13645984724525,
+        lon: 134.61629390716553,
+        rating: 2,
+        description: "空港"
+    },
+    {
+        name: "新ロイヤルホテル四万十",
+        reading: "しんろいやるしまんと",
+        type: "hotel",
+        subtype: "",
+        lat: 32.9933941362415,
+        lon: 132.93218851089478,
+        rating: 2,
+        description: "ホテル"
+    },
+    {
+        name: "ホテル大歩危峡まんなか",
+        reading: "ほてるおおぼけきょうまんなか",
+        type: "hotel",
+        subtype: "",
+        lat: 33.88401944538457,
+        lon: 133.75961780548096,
+        rating: 2,
+        description: "ホテル"
+    },
+    {
+        name: "大歩危",
+        reading: "おおぼけ",
+        type: "outdoor",
+        subtype: "",
+        lat: 33.88698310977637,
+        lon: 133.76047611236572,
+        rating: 2,
+        description: "自然"
+    },
+    {
+        name: "小歩危",
+        reading: "こぼけ",
+        type: "outdoor",
+        subtype: "",
+        lat: 33.93011492077536,
+        lon: 133.76172065734863,
+        rating: 2,
+        description: "自然"
+    },
+    {
+        name: "祖谷渓",
+        reading: "いやけい",
+        type: "outdoor",
+        subtype: "",
+        lat: 33.928672797637944,
+        lon: 133.81858348846436,
+        rating: 2,
+        description: "自然"
+    },
+    {
+        name: "桂浜",
+        reading: "かつらはま",
+        type: "park",
+        subtype: "",
+        lat: 33.496689281651314,
+        lon: 133.57263565063477,
+        rating: 2,
+        description: "公園"
+    },
+    {
+        name: "金刀比羅宮",
+        reading: "ことひらぐう",
+        type: "building",
+        subtype: "",
+        lat: 34.18400931542223,
+        lon: 133.80942106246948,
+        rating: 2,
+        description: "お寺"
+    },
+    {
+        name: "道後温泉",
+        reading: "どうごおんせん",
+        type: "hotspring",
+        subtype: "",
+        lat: 33.852044960504124,
+        lon: 132.7864158153534,
+        rating: 2,
+        description: "温泉"
+    },
+    {
+        name: "松山城",
+        reading: "まつやまじょう",
+        type: "building",
+        subtype: "",
+        lat: 33.8455403610226,
+        lon: 132.7657413482666,
+        rating: 2,
+        description: "お城"
+    },
+    {
+        name: "高知城",
+        reading: "こうちじょう",
+        type: "building",
+        subtype: "",
+        lat: 33.56099406341663,
+        lon: 133.5319948196411,
+        rating: 2,
+        description: "お城"
+    },
+    {
+        name: "丸亀城",
+        reading: "まるがめじょう",
+        type: "building",
+        subtype: "",
+        lat: 34.28572976338374,
+        lon: 133.80043029785156,
+        rating: 2,
+        description: "お城"
+    },
+    {
+        name: "四国カルスト",
+        reading: "しこくかるすと",
+        type: "outdoor",
+        subtype: "",
+        lat: 33.471902637858506,
+        lon: 132.93989181518555,
+        rating: 2,
+        description: "自然"
+    },
+    {
+        name: "宇和島城",
+        reading: "うわじまじょう",
+        type: "building",
+        subtype: "",
+        lat: 33.2194910222567,
+        lon: 132.56526231765747,
+        rating: 1,
+        description: "お城"
+    },
+    {
+        name: "金剛福寺",
+        reading: "こんごうふくじ",
+        type: "building",
+        subtype: "",
+        lat: 32.726019447151494,
+        lon: 133.01855564117432,
+        rating: 1,
+        description: "お寺，足摺岬"
+    },
+    {
+        name: "四万十川",
+        reading: "しまんとがわ",
+        type: "outdoor",
+        subtype: "",
+        lat: 33.1125364378191,
+        lon: 132.82350540161133,
+        rating: 2,
+        description: "自然"
+    },
+    {
+        name: "うずしお汽船",
+        reading: "うずしおきせん",
+        type: "building",
+        subtype: "",
+        lat: 34.23374067076658,
+        lon: 134.63772475719452,
+        rating: 2,
+        description: "汽船"
+    },
+    {
+        name: "うどん本陣 山田家",
+        reading: "うどんほんじん やまだや",
+        type: "food",
+        subtype: "sanukiudon",
+        lat: 34.35312005030322,
+        lon: 134.12989407777786,
+        rating: 2,
+        description: "さぬきうどん"
+    },
+    {
+        name: "山越うどん",
+        reading: "やまごえうどん",
+        type: "food",
+        subtype: "sanukiudon",
+        lat: 34.22587034307947,
+        lon: 133.92794787883759,
+        rating: 2,
+        description: "さぬきうどん"
+    },
+    {
+        name: "なかむら",
+        reading: "なかむら",
+        type: "food",
+        subtype: "sanukiudon",
+        lat: 34.260297872754876,
+        lon: 133.8357174396515,
+        rating: 1,
+        description: "さぬきうどん"
+    },
+    {
+        name: "やまうち",
+        reading: "やまうち",
+        type: "food",
+        subtype: "sanukiudon",
+        lat: 34.13697490273727,
+        lon: 133.8300633430481,
+        rating: 1,
+        description: "さぬきうどん"
+    },
+    {
+        name: "長田 in 香の香",
+        reading: "ながたいんかのか",
+        type: "food",
+        subtype: "sanukiudon",
+        lat: 34.25094239275415,
+        lon: 133.77950370311737,
+        rating: 1,
+        description: "さぬきうどん"
+    },
+    {
+        name: "谷川米穀店",
+        reading: "たにかわべいこくてん",
+        type: "food",
+        subtype: "sanukiudon",
+        lat: 34.11139594191219,
+        lon: 133.97640466690063,
+        rating: 1,
+        description: "さぬきうどん"
+    },
+    {
+        name: "須崎",
+        reading: "すざき",
+        type: "food",
+        subtype: "sanukiudon",
+        lat: 34.175098049044095,
+        lon: 133.76961171627045,
+        rating: 1,
+        description: "さぬきうどん"
+    },
+    {
+        name: "上戸うどん",
+        reading: "じょうとうどん",
+        type: "food",
+        subtype: "sanukiudon",
+        lat: 34.04799474284679,
+        lon: 133.61881658434868,
+        rating: 1,
+        description: "さぬきうどん"
+    },
+    {
+        name: "一鶴 丸亀本店",
+        reading: "いっかく",
+        type: "food",
+        subtype: "honetsukidori",
+        lat: 34.292847718618255,
+        lon: 133.79459381103516,
+        rating: 2,
+        description: "骨付き鳥"
+    },
+    {
+        name: "直火焼き骨付き鳥たあちゃん",
+        reading: "じかびやきのほねつきどりたあちゃん",
+        type: "food",
+        subtype: "honetsukidori",
+        lat: 34.29730610571058,
+        lon: 134.0111768245697,
+        rating: 1,
+        description: "骨付き鳥"
+    },
+    {
+        name: "橋本食堂",
+        reading: "はしもとしょくどう",
+        type: "food",
+        subtype: "nabeyakiramen",
+        lat: 33.39021093603861,
+        lon: 133.28365713357925,
+        rating: 2,
+        description: "鍋焼きラーメン"
+    },
+    {
+        name: "まゆみの店",
+        reading: "まゆみのみせ",
+        type: "food",
+        subtype: "nabeyakiramen",
+        lat: 33.39046847685703,
+        lon: 133.28116536140442,
+        rating: 1,
+        description: "鍋焼きラーメン"
+    },
+    {
+        name: "魚の店 つづき",
+        reading: "さかなのみせつづき",
+        type: "food",
+        subtype: "katsuo",
+        lat: 33.56019837168579,
+        lon: 133.54321718215942,
+        rating: 1,
+        description: "カツオ"
+    },
+    {
+        name: "藤のや",
+        reading: "ふじのや",
+        type: "food",
+        subtype: "katsuo",
+        lat: 33.55836557070888,
+        lon: 133.54382202029228,
+        rating: 1,
+        description: "カツオ，夜のみ"
+    },
+    {
+        name: "明神丸 ひろめ市場店",
+        reading: "みょうじんまる",
+        type: "food",
+        subtype: "katsuo",
+        lat: 33.56031459677782,
+        lon: 133.5357391834259,
+        rating: 2,
+        description: "カツオ"
+    },
+    {
+        name: "黒潮本陣",
+        reading: "くろしおほんじん",
+        type: "food",
+        subtype: "katsuo",
+        lat: 33.321635407659244,
+        lon: 133.23687136173248,
+        rating: 2,
+        description: "カツオ"
+    },
+    {
+        name: "司 高知本店",
+        reading: "つかさこうちほんてん",
+        type: "food",
+        subtype: "katsuo",
+        lat: 33.56053810613057,
+        lon: 133.54221940040588,
+        rating: 1,
+        description: "カツオ"
+    },
+    {
+        name: "厨房わかまつ",
+        reading: "ちゅうぼうわかまつ",
+        type: "food",
+        subtype: "katsuo",
+        lat: 32.993331145790314,
+        lon: 132.93318629264832,
+        rating: 1,
+        description: "カツオ，サバ"
+    },
+    {
+        name: "味劇場 ちか",
+        reading: "あじげきじょうちか",
+        type: "food",
+        subtype: "katsuo",
+        lat: 32.99367309341353,
+        lon: 132.9355788230896,
+        rating: 2,
+        description: "カツオ"
+    },
+    {
+        name: "王王軒",
+        reading: "わんわんけん",
+        type: "food",
+        subtype: "tokushimaramen",
+        lat: 34.112888260490465,
+        lon: 134.49077725410461,
+        rating: 2,
+        description: "徳島ラーメン"
+    },
+    {
+        name: "岡本中華",
+        reading: "おかもとちゅうか",
+        type: "food",
+        subtype: "tokushimaramen",
+        lat: 34.01609515657235,
+        lon: 134.5742529630661,
+        rating: 1,
+        description: "徳島ラーメン"
+    },
+    {
+        name: "ふく利 北島本店",
+        reading: "ふくり",
+        type: "food",
+        subtype: "tokushimaramen",
+        lat: 34.12592716211925,
+        lon: 134.558926820755,
+        rating: 1,
+        description: "徳島ラーメン"
+    },
+    {
+        name: "いのたに 本店",
+        reading: "いのたに",
+        type: "food",
+        subtype: "tokushimaramen",
+        lat: 34.07450154635951,
+        lon: 134.54305350780487,
+        rating: 2,
+        description: "徳島ラーメン"
+    },
+    {
+        name: "巽屋",
+        reading: "たつみや",
+        type: "food",
+        subtype: "tokushimaramen",
+        lat: 34.07801175945322,
+        lon: 134.57637190818787,
+        rating: 2,
+        description: "徳島ラーメン"
+    },
+    {
+        name: "ラーメン東大 大道本店",
+        reading: "らーめんとうだいおおみちほんてん",
+        type: "food",
+        subtype: "tokushimaramen",
+        lat: 34.06540319674917,
+        lon: 134.54751133918762,
+        rating: 1,
+        description: "徳島ラーメン"
+    },
+    {
+        name: "中華そば春陽軒",
+        reading: "ちゅうかそばしゅんようけん",
+        type: "food",
+        subtype: "tokushimaramen",
+        lat: 34.08361002612619,
+        lon: 134.5325767993927,
+        rating: 1,
+        description: "徳島ラーメン"
+    },
+    {
+        name: "祖谷そば もみじ亭",
+        reading: "いやそばもみじてい",
+        type: "food",
+        subtype: "others",
+        lat: 33.90733186310156,
+        lon: 133.755122423172,
+        rating: 1,
+        description: "祖谷そば"
+    },
+    {
+        name: "祖谷そば 初代仙吉",
+        reading: "いやそばしょだいせんきち",
+        type: "food",
+        subtype: "others",
+        lat: 33.88718573070416,
+        lon: 133.805910050869,
+        rating: 1,
+        description: "祖谷そば"
+    },
+    {
+        name: "五志喜 本店",
+        reading: "ごしき",
+        type: "food",
+        subtype: "tai",
+        lat: 33.83814857463759,
+        lon: 132.76873469352722,
+        rating: 1,
+        description: "鯛そうめん"
+    },
+    {
+        name: "太田屋 北条店",
+        reading: "おおたや",
+        type: "food",
+        subtype: "tai",
+        lat: 33.97703290617536,
+        lon: 132.7751988172531,
+        rating: 1,
+        description: "鯛めし"
+    },
+];
+
+var g_flg_showGoalName = 0;
+var g_goalPoiTableIndex = 0;
+var g_goalPoiTable = new Array(0, 4, 3);
+
+function getGoalPoiIndex() {
+    return g_goalPoiTable[g_goalPoiTableIndex];
+}
+
+function IncrementGoalPoiIndex() {
+    g_goalPoiTableIndex++;
+    g_goalPoiTableIndex %= g_goalPoiTable.length;
+}
+
+function mapOpen(lat,lon) {
+    if (g_map == null){
+        var mapOptions = {
+            zoom: 8,
+            center: new google.maps.LatLng(lat,lon),
+            mapTypeId: google.maps.MapTypeId.ROADMAP
+        };
+        g_map = new google.maps.Map(document.getElementById('map_canvas'), mapOptions);
+    }
+    if (g_directionsService == null){
+        g_directionsService = new google.maps.DirectionsService();
+    }
+    if (g_directionDisplay == null){
+        var rendererOptions = {
+            map: g_map,
+            preserveViewport: true,
+            suppressMarkers: true,            
+        };
+        g_directionsDisplay = new google.maps.DirectionsRenderer();
+        g_directionsDisplay.setOptions(rendererOptions);
+    }
+}
+
+function mapSetCenter(lat,lon) {
+    if (g_map != null){
+        var pos_current = new google.maps.LatLng(lat, lon);
+        g_map.setCenter(pos_current);
+    }
+}
+
+function showDuration(response, status) {
+    if (status == google.maps.DirectionsStatus.OK) {
+        g_directionsDisplay.setDirections(response);
+        var duration = response.routes[0].legs[0].duration.text;
+        document.getElementById("duration").innerHTML = "所要時間：" + duration;
+    } else {
+        document.getElementById("duration").innerHTML = "経路探索失敗";
+    }
+}
+
+function calcRoute(lat, lon, func) {
+    if (g_latlon_current != null){
+        var latlon_poi = new google.maps.LatLng(lat, lon);
+        var request = {
+            origin: g_latlon_current,
+            destination: latlon_poi,
+            travelMode: google.maps.DirectionsTravelMode.DRIVING,
+            //avoidHighways: true,
+            //avoidTolls: true,
+        };
+        g_directionsService.route(request, func);
+    }
+}
+
+function showGoalName() {
+    document.getElementById("duration_goal_name").innerHTML = g_poiInfos[getGoalPoiIndex()].name;
+    if (g_flg_showGoalName == 0){
+        document.getElementById("duration_goal_title").innerHTML = "本日のゴール（タップで切り替え）：";
+        $("#duration_goal_name").css('background-color', 'wheat');
+        $("#duration_goal_name").css('padding', '10px');
+        $("#duration_goal_name").bind("tap", function(){
+            IncrementGoalPoiIndex();
+            showGoalName();
+        });
+        g_flg_showGoalName = 1;
+    }
+}
+
+function showDurationToGoal(response, status) {
+    if (status == google.maps.DirectionsStatus.OK) {
+        var duration = response.routes[0].legs[0].duration.text;
+        showGoalName();
+        document.getElementById("duration_goal").innerHTML = g_poiInfos[getGoalPoiIndex()].name + " までの所要時間：" + duration;
+    } else {
+        document.getElementById("duration_goal").innerHTML = "";
+    }
+}
+
+function calcRouteToGoal(lat, lon, func) {
+    if (g_latlon_current != null){
+        document.getElementById("duration").innerHTML = "";
+        document.getElementById("duration_goal").innerHTML = "";
+        var latlon_poi = new google.maps.LatLng(lat, lon);
+        var latlon_goal = new google.maps.LatLng(g_poiInfos[getGoalPoiIndex()].lat, g_poiInfos[getGoalPoiIndex()].lon);
+        var request = {
+            origin: g_latlon_current,
+            destination: latlon_goal,
+            travelMode: google.maps.DirectionsTravelMode.DRIVING,
+            waypoints: [{location: latlon_poi, stopover: false}],
+            //avoidHighways: true,
+            //avoidTolls: true,
+        };
+        g_directionsService.route(request, func);
+    }
+}
+
+function showDetails(lat, lon, html) {
+    document.getElementById("details").innerHTML = html;
+    calcRoute(lat, lon, showDuration);
+    calcRouteToGoal(lat, lon, showDurationToGoal);
+}
+
+function addMarker(lat,lon,pic,html) {
+    if (g_map != null){
+        var pos_marker = new google.maps.LatLng(lat, lon);
+        var marker = new google.maps.Marker({
+            map: g_map,
+            position: pos_marker,
+            icon: pic.icon,
+            shadow: pic.shadow,
+            title: "POI"
+        });
+        google.maps.event.addListener(marker, 'click', function() {
+            showDetails(lat, lon, html);
+        });
+    }
+}
+
+function getPoiPic(poiInfo) {
+    if (poiInfo.type == "food") {
+        if (poiInfo.subtype == "sanukiudon") {
+            if (poiInfo.rating >= 2) {
+                return g_iconPics.blue_pin;
+            } else {
+                return g_iconPics.blue_pin_s;
+            }
+        } else if (poiInfo.subtype == "tokushimaramen") {
+            if (poiInfo.rating >= 2) {
+                return g_iconPics.red_pin;
+            } else {
+                return g_iconPics.red_pin_s;
+            }
+        } else if (poiInfo.subtype == "nabeyakiramen") {
+            if (poiInfo.rating >= 2) {
+                return g_iconPics.orange_pin;
+            } else {
+                return g_iconPics.orange_pin_s;
+            }
+        } else if (poiInfo.subtype == "honetsukidori") {
+            if (poiInfo.rating >= 2) {
+                return g_iconPics.yello_pin;
+            } else {
+                return g_iconPics.yello_pin_s;
+            }
+        } else if (poiInfo.subtype == "katsuo") {
+            if (poiInfo.rating >= 2) {
+                return g_iconPics.green_pin;
+            } else {
+                return g_iconPics.green_pin_s;
+            }
+        } else if (poiInfo.subtype == "tai") {
+            if (poiInfo.rating >= 2) {
+                return g_iconPics.violet_pin;
+            } else {
+                return g_iconPics.violet_pin_s;
+            }
+        } else {
+            if (poiInfo.rating >= 2) {
+                return g_iconPics.violet_pin;
+            } else {
+                return g_iconPics.violet_pin_s;
+            }
+        }
+    } else if (poiInfo.type == "hotel") {
+        return g_iconPics.bed;
+    } else if (poiInfo.type == "outdoor") {
+        return g_iconPics.tree;
+    } else if (poiInfo.type == "park") {
+        return g_iconPics.tree2;
+    } else if (poiInfo.type == "building") {
+        return g_iconPics.building;
+    } else if (poiInfo.type == "city") {
+        return g_iconPics.city;
+    } else if (poiInfo.type == "airport") {
+        return g_iconPics.plane;
+    } else if (poiInfo.type == "hotspring") {
+        return g_iconPics.hotspring;
+    } else {
+        return g_iconPics.city;
+    }
+}
+
+function getPoiHtml(poiInfo) {
+    var html = "<h3>" + poiInfo.name + "</h3>" + poiInfo.description;
+    var url = 'http://www.google.co.jp/webhp?hl=ja&tab=ww#hl=ja&q=' + poiInfo.name + ' 四国&oq=' + poiInfo.name + ' 四国';
+    return html + '<br /><a href="' + url + '">Google検索</a>';
+}
+
+function appendPoiInfo(poiInfo) {
+    var lat = poiInfo.lat;
+    var lon = poiInfo.lon;
+    var pic = getPoiPic(poiInfo);
+    var html = getPoiHtml(poiInfo);
+    addMarker(lat,lon,pic,html);
+}
+
+function locUpdate(pos) {
+    var lat = pos.coords.latitude;
+    var lon = pos.coords.longitude;
+    if (pos.coords.latitude>32.4 && pos.coords.latitude<34.6 && pos.coords.longitude>132 && pos.coords.longitude<135) {
+        mapSetCenter(lat, lon);
+    }
+    addMarker(lat, lon, g_iconPics.car, "現在地");
+    g_latlon_current = new google.maps.LatLng(lat, lon);
+}
+
+function handleError(a) {
+    // Do nothing.
+}
+
+$(document).on( 'pageinit',function(event){
+    mapOpen(LATLON_INIT.lat(), LATLON_INIT.lng());
+    navigator.geolocation.getCurrentPosition(locUpdate, handleError, {enableHighAccuracy:true});
+    for( var i = 0; i < g_poiInfos.length; i++ ){
+        appendPoiInfo(g_poiInfos[i]);
+    }
+});
+
+
+</script>
+</head>
+<body>
+
+<!-- *************************************** -->
+<!-- ********** Main Page ****************** -->
+<!-- *************************************** -->
+<div data-role="page" id="main_page" data-theme="e">
+
+<!-- ********** Header ********************* -->
+<div data-role="header">
+    <h1>四国旅行地図</h1>
+</div>
+
+
+<!-- ********** Content ******************** -->
+<div data-role="content">
+
+<div id="map_canvas" style="height:300px"></div>
+
+<p id="details">アイコンタップで詳細表示</p>
+<p id="duration"></p>
+<p><span id="duration_goal_title"></span><div id="duration_goal_name"></div></p>
+<p id="duration_goal"></p>
+
+</div>
+
+<!-- ********** Footer ********************* -->
+<div data-role="footer">
+    <h1>四国旅行地図</h1>
+</div>
+
+</div>
+
+</body>
+</html>
